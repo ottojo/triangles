@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>triangles</title>
+
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        /* Scale canvas with resize attribute to full size */
+        canvas[resize] {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+    <script>
+        window.globals = {};
+        window.globals.debug = true;
+    </script>
+
+    <script src="https://unpkg.com/delaunator@4.0.1/delaunator.js"></script>
+
+    <script type="text/javascript" src="paper-full.js"></script>
+    <!--<link rel="stylesheet" href="style.css">-->
+    <script type="text/paperscript" src="myScript.js" canvas="myCanvas"></script>
+    <script>
+        async function fileChooserSVG(input) {
+            let file = input.files[0];
+
+            const svgData = await file.text();
+            window.globals.drawPaperImage(svgData);
+        }
+
+        function setDebug(checkbox) {
+            window.globals.debug = checkbox.checked;
+        }
+    </script>
+</head>
+
+<body>
+    <input type="file" onchange="fileChooserSVG(this)" accept="image/svg+xml">
+    Debug: <input type="checkbox" id="debugCheck" onclick="setDebug(this)" checked>
+    <br>
+
+    <canvas id="myCanvas" resize></canvas>
+</body>
+
+</html>
