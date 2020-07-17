@@ -12,21 +12,27 @@ function onMouseUp(event) {
 }
 
 function pointsOf(item) {
-    foundPoints = []
+    foundPoints = [];
+
     if (typeof item.children !== "undefined") {
         for (var i = 0; i < item.children.length; i++) {
-            Array.prototype.push.apply(foundPoints, pointsOf(item.children[i]));
+            var childrenPoints = pointsOf(item.children[i]);
+            if (childrenPoints.length > 0) {
+                return childrenPoints;
+            }
         }
     }
 
-    if (typeof item.curves !== "undefined") {
-        for (var i = 0; i < item.curves.length; i++) {
-            foundPoints.push([item.curves[i].point1.x, item.curves[i].point1.y]);
-            foundPoints.push([item.curves[i].point2.x, item.curves[i].point2.y]);
+    if (typeof item.name !== "undefined" && item.name == "BORDER") {
+        console.log("Found BORDER:", item);
+        for (var i = 0; i < item.segments.length; i++) {
+            console.log("Adding Border Point", i, item.segments[i].point);
+            foundPoints.push([item.segments[i].point.x, item.segments[i].point.y]);
         }
+        return foundPoints;
     }
 
-    return foundPoints;
+    return [];
 }
 
 function generatePoints(image) {
@@ -104,6 +110,7 @@ function offsetTri(tri, X) {
     var An = offsetPoint(A, B, C, X);
     var Bn = offsetPoint(B, C, A, X);
     var Cn = offsetPoint(C, A, B, X);
+
     return [An, Bn, Cn];
 }
 
@@ -116,17 +123,22 @@ function recalcTriangles(points) {
         var offsetTrianglePoints = offsetTri(tri, 2.5);
 
         var innerTri = new Path();
+        var outerTri = new Path(tri);
+        outerTri.closed = true;
+
         for (var i = 0; i < offsetTrianglePoints.length; i++) {
+
+            if (!outerTri.contains(offsetTrianglePoints[i])) {
+                console.log("Skipping Tri because it is too small for offset:", outerTri);
+                return;
+            }
             innerTri.add(offsetTrianglePoints[i]);
         }
 
         if (innerTri.intersects(inputImage)) {
             innerTri.fillColor = 'red';
-            //innerTri.opacity = 0.5;
-
         } else {
             innerTri.fillColor = '#f96900ff';
-
         }
 
         triangleGroup.addChild(innerTri);
@@ -161,6 +173,7 @@ function recalcTriangles(points) {
 
 globals.drawPaperImage = function (svgData) {
     inputImage = project.importSVG(svgData);
+    console.log("Read input image:", inputImage);
 }
 
 function edgesOfTriangle(t) { return [3 * t, 3 * t + 1, 3 * t + 2]; }
